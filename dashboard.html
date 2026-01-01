@@ -4,13 +4,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dashboard</title>
 <style>
-body { font-family: Arial; padding: 20px; max-width: 500px; margin: auto; }
+body { font-family: Arial; max-width: 500px; margin: auto; padding: 20px; }
 h2,h3 { margin: 10px 0; }
-input, button { padding: 10px; margin: 5px 0; width: 100%; box-sizing: border-box; }
+input, button { width: 100%; padding: 10px; margin: 5px 0; }
 button { cursor: pointer; }
-.balance { color: green; font-weight: bold; font-size: 18px; }
-#sendBtn { background-color: #23487f; color: white; border: none; }
-#logoutBtn { background-color: #ff4b4b; color: white; border: none; }
+.balance { color: green; font-size: 20px; font-weight: bold; }
+#sendBtn { background:#23487f; color:white; border:none; }
+#logoutBtn { background:#ff4b4b; color:white; border:none; }
+#adminPanel { background:#f2f2f2; padding:15px; margin-top:20px; display:none; }
 </style>
 </head>
 <body>
@@ -18,18 +19,35 @@ button { cursor: pointer; }
 <h2>Welcome, <span id="userName"></span></h2>
 <h3>Balance: <span class="balance" id="userBalance">0</span> SC</h3>
 
+<hr>
+
 <h3>Send Money</h3>
 <input type="email" id="receiverEmail" placeholder="Receiver Email">
 <input type="number" id="amount" placeholder="Amount">
-<button id="sendBtn">Send</button>
+<button id="sendBtn">Send Money</button>
+
+<hr>
+
+<!-- 🔐 ADMIN PANEL -->
+<div id="adminPanel">
+  <h3>Admin Panel – Add Balance</h3>
+  <input type="email" id="adminUserEmail" placeholder="User Email">
+  <input type="number" id="adminAmount" placeholder="Amount">
+  <button id="addBalanceBtn">Add Balance</button>
+</div>
+
+<hr>
 <button id="logoutBtn">Logout</button>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, doc, getDoc, updateDoc, collection, query, where, getDocs, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import {
+  getFirestore, doc, getDoc, updateDoc,
+  collection, query, where, getDocs, onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// 🔹 Firebase Config
+/* 🔥 Firebase Config */
 const firebaseConfig = {
   apiKey: "AIzaSyDjEgk5EHgQD5HQJxEvHOzFwVyr9ZLEZBY",
   authDomain: "verifyprojectss.firebaseapp.com",
@@ -37,68 +55,91 @@ const firebaseConfig = {
   appId: "1:979191477358:web:2f5176ea9174579118a27f"
 };
 
+const ADMIN_EMAIL = "verifyproject11@gmail.com"; // 🔐 change if needed
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
 let currentUser;
 
-// 🔹 Check login
+/* 🔐 Auth Check */
 onAuthStateChanged(auth, async (user) => {
-  if(!user) {
+  if (!user) {
     window.location.href = "index.html";
     return;
   }
+
   currentUser = user;
   document.getElementById("userName").innerText = user.displayName;
 
-  // 🔹 Realtime balance update
-  const senderRef = doc(db, "users", user.uid);
-  onSnapshot(senderRef, (docSnap) => {
-    if(docSnap.exists()){
-      document.getElementById("userBalance").innerText = docSnap.data().balance;
+  // 🔐 Admin check
+  if (user.email === ADMIN_EMAIL) {
+    document.getElementById("adminPanel").style.display = "block";
+  }
+
+  // 🔄 Realtime balance
+  const ref = doc(db, "users", user.uid);
+  onSnapshot(ref, (snap) => {
+    if (snap.exists()) {
+      document.getElementById("userBalance").innerText = snap.data().balance || 0;
     }
   });
 });
 
-// 🔹 Send Money
-document.getElementById("sendBtn").addEventListener("click", async () => {
-  const receiverEmail = document.getElementById("receiverEmail").value.trim();
-  const amount = parseFloat(document.getElementById("amount").value);
+/* 💸 Send Money */
+document.getElementById("sendBtn").onclick = async () => {
+  const email = receiverEmail.value.trim();
+  const amount = Number(document.getElementById("amount").value);
 
-  if(!receiverEmail || !amount) return alert("Fill all fields");
+  if (!email || amount <= 0) return alert("Invalid input");
 
-  try {
-    // 🔹 Find receiver
-    const q = query(collection(db, "users"), where("email", "==", receiverEmail));
-    const querySnap = await getDocs(q);
-    if(querySnap.empty) return alert("Receiver not found");
+  const q = query(collection(db, "users"), where("email", "==", email));
+  const snap = await getDocs(q);
+  if (snap.empty) return alert("User not found");
 
-    const receiverDoc = querySnap.docs[0];
-    const receiverRef = doc(db, "users", receiverDoc.id);
+  const receiverDoc = snap.docs[0];
+  const receiverRef = doc(db, "users", receiverDoc.id);
+  const senderRef = doc(db, "users", currentUser.uid);
 
-    // 🔹 Sender balance
-    const senderRef = doc(db, "users", currentUser.uid);
-    const senderSnap = await getDoc(senderRef);
+  const senderSnap = await getDoc(senderRef);
+  if (senderSnap.data().balance < amount) return alert("Insufficient balance");
 
-    if(senderSnap.data().balance < amount) return alert("Insufficient Balance");
+  await updateDoc(senderRef, {
+    balance: senderSnap.data().balance - amount
+  });
 
-    // 🔹 Update balances
-    await updateDoc(senderRef, { balance: senderSnap.data().balance - amount });
-    await updateDoc(receiverRef, { balance: receiverDoc.data().balance + amount });
+  await updateDoc(receiverRef, {
+    balance: receiverDoc.data().balance + amount
+  });
 
-    alert("Money sent successfully!");
-    document.getElementById("receiverEmail").value = "";
-    document.getElementById("amount").value = "";
+  alert("Money sent successfully");
+};
 
-  } catch (e) {
-    alert("Error: " + e.message);
-  }
-});
+/* ➕ Admin Add Balance */
+document.getElementById("addBalanceBtn").onclick = async () => {
+  const email = adminUserEmail.value.trim();
+  const amount = Number(adminAmount.value);
 
-// 🔹 Logout
-document.getElementById("logoutBtn").addEventListener("click", () => signOut(auth));
+  if (!email || amount <= 0) return alert("Invalid input");
 
+  const q = query(collection(db, "users"), where("email", "==", email));
+  const snap = await getDocs(q);
+  if (snap.empty) return alert("User not found");
+
+  const userDoc = snap.docs[0];
+  const userRef = doc(db, "users", userDoc.id);
+
+  await updateDoc(userRef, {
+    balance: (userDoc.data().balance || 0) + amount
+  });
+
+  alert("Balance added successfully");
+};
+
+/* 🚪 Logout */
+document.getElementById("logoutBtn").onclick = () => signOut(auth);
 </script>
+
 </body>
 </html>
