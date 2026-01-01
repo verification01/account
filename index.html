@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login</title>
+</head>
+<body>
+<h1>Welcome! Login to continue</h1>
+<button id="loginBtn">Login with Google</button>
+
+<script type="module">
+import { auth, provider, signInWithPopup, onAuthStateChanged, db } from './js/firebaseConfig.js';
+import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const loginBtn = document.getElementById('loginBtn');
+
+loginBtn.addEventListener('click', () => {
+  signInWithPopup(auth, provider)
+    .then(async (result) => {
+      const user = result.user;
+
+      // 🔹 Create user in Firestore if not exists
+      const docRef = doc(db, 'users', user.uid);
+      const docSnap = await getDoc(docRef);
+      if(!docSnap.exists()){
+        await setDoc(docRef, {
+          name: user.displayName,
+          email: user.email,
+          balance: 0
+        });
+      }
+
+      // 🔹 Redirect to dashboard
+      window.location.href = "dashboard.html";
+    })
+    .catch(err => alert(err.message));
+});
+
+// 🔹 Auto redirect if already logged in
+onAuthStateChanged(auth, (user) => {
+  if(user) window.location.href = "dashboard.html";
+});
+</script>
+</body>
+</html>
