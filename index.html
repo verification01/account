@@ -1,8 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login</title>
+<style>
+body { font-family: Arial; padding: 20px; max-width: 400px; margin: auto; text-align: center; }
+button { padding: 10px 20px; margin: 10px 0; cursor: pointer; background-color: #23487f; color: white; border: none; }
+</style>
 </head>
 <body>
 
@@ -10,61 +14,51 @@
 <button id="loginBtn">Login with Google</button>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import { 
-    getAuth, 
-    GoogleAuthProvider, 
-    signInWithPopup, 
-    onAuthStateChanged 
-  } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-  import { 
-    getFirestore, 
-    doc, 
-    setDoc, 
-    getDoc 
-  } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-  // 🔴 এখানে তোমার আসল Firebase config বসাবে
-  const firebaseConfig = {
-    apiKey: "AIzaSyDjEgk5EHgQD5HQJxEvHOzFwVyr9ZLEZBY",
-    authDomain: "verifyprojectss.firebaseapp.com",
-    projectId: "verifyprojectss",
-    appId: "1:979191477358:web:2f5176ea9174579118a27f"
-  };
+// 🔹 Firebase Config
+const firebaseConfig = {
+  apiKey: "AIzaSyDjEgk5EHgQD5HQJxEvHOzFwVyr9ZLEZBY",
+  authDomain: "verifyprojectss.firebaseapp.com",
+  projectId: "verifyprojectss",
+  appId: "1:979191477358:web:2f5176ea9174579118a27f"
+};
 
-  // Init
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const provider = new GoogleAuthProvider();
-  const db = getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const provider = new GoogleAuthProvider();
+const db = getFirestore(app);
 
-  // Login
-  document.getElementById("loginBtn").onclick = async () => {
-    try {
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
+// 🔹 Login button
+document.getElementById("loginBtn").onclick = async () => {
+  try {
+    const result = await signInWithPopup(auth, provider);
+    const user = result.user;
 
-      const ref = doc(db, "users", user.uid);
-      const snap = await getDoc(ref);
+    const ref = doc(db, "users", user.uid);
+    const snap = await getDoc(ref);
 
-      if (!snap.exists()) {
-        await setDoc(ref, {
-          name: user.displayName,
-          email: user.email,
-          balance: 0
-        });
-      }
-
-      window.location.href = "dashboard.html";
-    } catch (e) {
-      alert(e.message);
+    // যদি নতুন ইউজার হয়, Firestore এ create করবে
+    if (!snap.exists()) {
+      await setDoc(ref, {
+        name: user.displayName,
+        email: user.email,
+        balance: 100 // default balance
+      });
     }
-  };
 
-  // Auto redirect
-  onAuthStateChanged(auth, (user) => {
-    if (user) window.location.href = "dashboard.html";
-  });
+    window.location.href = "dashboard.html";
+  } catch (e) {
+    alert(e.message);
+  }
+};
+
+// 🔹 Auto redirect যদি আগে থেকে login থাকে
+onAuthStateChanged(auth, (user) => {
+  if (user) window.location.href = "dashboard.html";
+});
 </script>
 
 </body>
