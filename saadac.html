@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Student Profile</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+
+  <h2 id="balanceShow">Balance: --</h2>
+
+  <hr>
+
+  <h3>Send Balance</h3>
+  <input id="receiver" placeholder="Receiver ID (e.g. saad)">
+  <br><br>
+  <input id="amount" type="number" placeholder="Amount">
+  <br><br>
+  <button onclick="sendBalance()">Send</button>
+
+  <!-- 🔥 FIREBASE SCRIPT -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import {
+      getFirestore,
+      doc,
+      runTransaction,
+      onSnapshot
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    // 🔹 Firebase config (নিজেরটা বসাবে)
+    const firebaseConfig = {
+      apiKey: "AIzaSyDjEgk5EHgQD5HQJxEvHOzFwVyr9ZLEZBY",
+      authDomain: "verifyprojectss.firebaseapp.com",
+      projectId: "verifyprojectss"
+    };
+
+    // 🔹 Init
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // 🔹 এই পেইজের student ID
+    const myId = "saaad";   // 👉 saad.html হলে "saad"
+
+    const balanceText = document.getElementById("balanceShow");
+
+    // 🔹 Live balance দেখানো
+    onSnapshot(doc(db, "students", myId), (snap) => {
+      if (snap.exists()) {
+        balanceText.innerText =
+          "Balance: " + snap.data().balance + " SC";
+      } else {
+        balanceText.innerText = "Account not found";
+      }
+    });
+
+    // 🔹 Balance transfer function
+    async function sendBalance() {
+      const receiverId = document.getElementById("receiver").value.trim();
+      const amount = Number(document.getElementById("amount").value);
+
+      if (!receiverId || amount <= 0) {
+        alert("Invalid input");
+        return;
+      }
+
+      const senderRef = doc(db, "students", myId);
+      const receiverRef = doc(db, "students", receiverId);
+
+      try {
+        await runTransaction(db, async (tx) => {
+          const senderSnap = await tx.get(senderRef);
+          const receiverSnap = await tx.get(receiverRef);
+
+          if (!senderSnap.exists() || !receiverSnap.exists()) {
+            throw "User not found";
+          }
+
+          const senderBalance = senderSnap.data().balance;
+          const receiverBalance = receiverSnap.data().balance;
+
+          if (senderBalance < amount) {
+            throw "Not enough balance";
+          }
+
+          tx.update(senderRef, {
+            balance: senderBalance - amount
+          });
+
+          tx.update(receiverRef, {
+            balance: receiverBalance + amount
+          });
+        });
+
+        alert("Transfer successful ✅");
+
+      } catch (e) {
+        alert("Failed: " + e);
+      }
+    }
+
+    // 🔹 HTML button access
+    window.sendBalance = sendBalance;
+  </script>
+
+</body>
+</html>
