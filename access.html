@@ -449,20 +449,31 @@ position:fixed;
 margin-top:200px;
 border: 2px solid black;
 height:auto;
-width:400px;
+width:300px;
 margin-left:500px;
  background: rgba(0,0,0,0.5);
 }
 
 @media(max-width:480px){
 	.access{
-		margin-left:5px;
+		margin-left:10px;
 	}
+}
+.lbtn{
+top:4px;
+lefr:4px:
+height:80px:
+width:40px;
+border:1px solid black;
+border-radius:15px;
+background:red;
+z-index:100;
 }
 
 </style>
 </head>
 <body>
+<button class = "lbtn" onclick = "lbtn()">Log Out</button>
 <div class = "access">
 <div class="glitch-input-wrapper">
   <div class="input-container">
@@ -516,5 +527,10 @@ margin-left:500px;
 </div>
 </div>
 <script src = "style.js"></script>
+<script>
+function lbtn(){
+window.location.href = "login.html"
+}
+</script>
 </body>
 </html>
