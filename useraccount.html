@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="text-align:center;font-family:Arial">
+
+<h2>Student Wallet Login</h2>
+<button onclick="login()">Login with Google</button>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup } 
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc } 
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDjEgk5EHgQD5HQJxEvHOzFwVyr9ZLEZBY",
+  authDomain: "verifyprojectss.firebaseapp.com",
+  projectId: "verifyprojectss"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const provider = new GoogleAuthProvider();
+
+// 🔢 6 digit ID
+function generateAccountId(){
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+async function login(){
+  const result = await signInWithPopup(auth, provider);
+  const user = result.user;
+
+  const ref = doc(db,"users",user.uid);
+  const snap = await getDoc(ref);
+
+  // নতুন user হলে create করবে
+  if(!snap.exists()){
+    await setDoc(ref,{
+      name: user.displayName,
+      email: user.email,
+      accountId: generateAccountId(),
+      balance: 5
+    });
+  }
+
+  // user page
+  window.location.href = "user.html";
+}
+
+window.login = login;
+</script>
+</body>
+</html>
