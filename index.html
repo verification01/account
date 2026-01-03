@@ -279,9 +279,19 @@ background:black;
 margin-top:30%;
 }
 }
+.login{
+  margin-left:21%;
+}
+.text{
+  color: blue;
+  text-align: center;
+  font-size:22px;
+}
+
 </style>
 </head>
 <body>
+<pre class = "text"></pre>
 <div class = "margin">
 <form class="container" action="">
   <div class="input-container">
@@ -301,9 +311,17 @@ margin-top:30%;
       </div>
     </div>
   </div>
-</form>
-
+</form><br><br><br>
+<a href = "caution.html" class = "login">Creat or log in your account manually via google</a>
 <script src = "script.js"></script>
-
+<script src="https://unpkg.com/typed.js@2.1.0/dist/typed.umd.js"></script>
+<script>
+    var typed = new Typed('.text', {
+      strings: ["welcome!","log in to get access","in secure coin"],
+      typeSpeed: 150,
+      loop: true
+      
+    });
+  </script>
 </body>
 </html>
