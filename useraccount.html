@@ -103,73 +103,56 @@ alert(caution);
 </script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup } 
+import { getAuth, GoogleAuthProvider, signInWithRedirect, onAuthStateChanged } 
 from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc } 
 from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+// Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyDjEgk5EHgQD5HQJxEvHOzFwVyr9ZLEZBY",
   authDomain: "verifyprojectss.firebaseapp.com",
   projectId: "verifyprojectss"
 };
 
+// Initialize
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
-// 🔢 6 digit ID
+// 6-digit ID
 function generateAccountId(){
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
+// Login button
 async function login(){
-  const result = await signInWithPopup(auth, provider);
-  const user = result.user;
-
-  const ref = doc(db,"users",user.uid);
-  const snap = await getDoc(ref);
-
-  // নতুন user হলে create করবে
-  if(!snap.exists()){
-    await setDoc(ref,{
-      name: user.displayName,
-      email: user.email,
-      accountId: generateAccountId(),
-      balance: 5
-    });
-  }
-
-  // user page
-  window.location.href = "user.html";
+  await signInWithRedirect(auth, provider);
 }
 
-window.login = login;
-</script>
+// Auto redirect after login
+onAuthStateChanged(auth, async (user) => {
+  if(user){
+    const ref = doc(db,"users",user.uid);
+    const snap = await getDoc(ref);
 
+    // Create new user in Firestore
+    if(!snap.exists()){
+      await setDoc(ref,{
+        name: user.displayName,
+        email: user.email,
+        accountId: generateAccountId(),
+        balance: 5
+      });
+    }
 
-
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, onAuthStateChanged }
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyDjEgk5EHgQD5HQJxEvHOzFwVyr9ZLEZBY",
-  authDomain: "verifyprojectss.firebaseapp.com",
-  projectId: "verifyprojectss"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-
-// 🔁 AUTO REDIRECT (ওয়েব + মোবাইল)
-onAuthStateChanged(auth, (user) => {
-  if (user) {
+    // Go to user page
     window.location.href = "user.html";
   }
 });
+
+window.login = login;
 </script>
 
 </body>
