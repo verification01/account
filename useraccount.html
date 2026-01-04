@@ -147,5 +147,30 @@ async function login(){
 
 window.login = login;
 </script>
+
+
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, onAuthStateChanged }
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDjEgk5EHgQD5HQJxEvHOzFwVyr9ZLEZBY",
+  authDomain: "verifyprojectss.firebaseapp.com",
+  projectId: "verifyprojectss"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+// 🔁 AUTO REDIRECT (ওয়েব + মোবাইল)
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    window.location.href = "user.html";
+  }
+});
+</script>
+
 </body>
 </html>
