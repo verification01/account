@@ -304,9 +304,14 @@ margin-left:4px;
 }
 .script{
   height: 50px;
-  width:300px;
+  width: 300px;
   border: 1px solid blue;
-  margin-left:37%;
+
+  display: flex;
+  align-items: center;      /* vertical center */
+  justify-content: center;  /* horizontal center */
+
+  margin: 0 auto;           /* page এর মাঝখানে */
 }
 </style>
 </head>
@@ -339,7 +344,7 @@ margin-left:4px;
 <script src="https://unpkg.com/typed.js@2.1.0/dist/typed.umd.js"></script>
 <script>
     var typed = new Typed('.text', {
-      strings: ["welcome!","log in to get access","in secure coin"],
+      strings: ["welcome!","log in to get access","in SecureCoin"],
       typeSpeed: 150,
       loop: true
       
