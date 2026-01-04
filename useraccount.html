@@ -103,8 +103,12 @@ alert(caution);
 </script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup } 
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { 
+  getAuth, 
+  GoogleAuthProvider, 
+  signInWithRedirect, 
+  getRedirectResult 
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc } 
 from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
@@ -124,28 +128,37 @@ function generateAccountId(){
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
+// login button
 async function login(){
-  const result = await signInWithPopup(auth, provider);
-  const user = result.user;
-
-  const ref = doc(db,"users",user.uid);
-  const snap = await getDoc(ref);
-
-  // নতুন user হলে create করবে
-  if(!snap.exists()){
-    await setDoc(ref,{
-      name: user.displayName,
-      email: user.email,
-      accountId: generateAccountId(),
-      balance: 5
-    });
-  }
-
-  // user page
-  window.location.href = "user.html";
+  await signInWithRedirect(auth, provider);
 }
-
 window.login = login;
+
+// redirect result handle
+getRedirectResult(auth)
+.then(async (result) => {
+  if(result){
+    const user = result.user;
+
+    const ref = doc(db,"users",user.uid);
+    const snap = await getDoc(ref);
+
+    if(!snap.exists()){
+      await setDoc(ref,{
+        name: user.displayName,
+        email: user.email,
+        accountId: generateAccountId(),
+        balance: 5
+      });
+    }
+
+    window.location.href = "user.html";
+  }
+})
+.catch((error) => {
+  console.error("Auth error:", error);
+});
 </script>
+
 </body>
 </html>
