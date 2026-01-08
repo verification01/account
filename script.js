@@ -7,6 +7,9 @@ window.location.href = "access.html";
 else if(usr === "santo" && paswrd === "santo5028"){
 window.location.href = "access.html";
 }
+else if(usr === "sabit" && paswrd === "sabit0114"){
+window.location.href = "access.html";
+}
 else{
 alert("invalid user or password");
 }
