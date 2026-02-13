@@ -45,7 +45,7 @@ body {
 
 <script type="module">
 
-// ---------------- Firebase Import ----------------
+// ---------------- Firebase Imports ----------------
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
@@ -57,7 +57,7 @@ const firebaseConfig = {
     projectId: "verifyprojectss",
 };
 
-// ---------------- Initialize ----------------
+// ---------------- Initialize Firebase ----------------
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -82,7 +82,7 @@ getRedirectResult(auth)
         const snap = await getDoc(userRef);
 
         if(!snap.exists()){
-            await setDoc(userRef, {
+            await setDoc(userRef,{
                 name: user.displayName,
                 email: user.email,
                 accountId: generateAccountId(),
@@ -91,12 +91,13 @@ getRedirectResult(auth)
             });
         }
 
-        // ✅ GitHub Pages safe redirect
+        // ✅ Absolute path for GitHub Pages redirect
         window.location.href = "/account/user.html";
     }
 })
 .catch(console.error);
 
 </script>
+
 </body>
 </html>
