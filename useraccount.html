@@ -109,58 +109,66 @@ let caution = `----------------------------Caution------------------------------
 alert(caution);
 </script>
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithRedirect, onAuthStateChanged } 
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc } 
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// Firebase Config
+// Firebase Import
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {
+  getAuth,
+  GoogleAuthProvider,
+  signInWithRedirect,
+  getRedirectResult,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
 const firebaseConfig = {
   apiKey: "AIzaSyDjEgk5EHgQD5HQJxEvHOzFwVyr9ZLEZBY",
   authDomain: "verifyprojectss.firebaseapp.com",
-  projectId: "verifyprojectss"
+  projectId: "verifyprojectss",
 };
 
-// Initialize
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
-// 6-digit ID
-function generateAccountId(){
+function generateAccountId() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-// Login button
-async function login(){
+window.login = async function () {
   await signInWithRedirect(auth, provider);
-}
+};
 
-// Auto redirect after login
+getRedirectResult(auth).catch(console.error);
+
 onAuthStateChanged(auth, async (user) => {
-  if(user){
-    const ref = doc(db,"users",user.uid);
-    const snap = await getDoc(ref);
+  if (user) {
+    const userRef = doc(db, "users", user.uid);
+    const userSnap = await getDoc(userRef);
 
-    // Create new user in Firestore
-    if(!snap.exists()){
-      await setDoc(ref,{
+    if (!userSnap.exists()) {
+      await setDoc(userRef, {
         name: user.displayName,
         email: user.email,
         accountId: generateAccountId(),
-        balance: 5
+        balance: 5,
+        createdAt: new Date()
       });
     }
 
-    // Go to user page
     window.location.href = "user.html";
   }
 });
 
-window.login = login;
 </script>
+
 
 </body>
 </html>
